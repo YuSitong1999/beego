@@ -87,6 +87,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	app.initAddr(addr)
 
 	addr = app.Cfg.Listen.HTTPAddr
+	adminAddr := ":" + strconv.Itoa(app.Cfg.Listen.AdminPort)
 
 	if app.Cfg.Listen.HTTPPort != 0 {
 		addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPAddr, app.Cfg.Listen.HTTPPort)
@@ -99,7 +100,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	)
 
 	// run cgi server
-	if app.Cfg.Listen.EnableFcgi {
+	if app.Cfg.Listen.EnableFcgi && adminAddr != addr {
 		if app.Cfg.Listen.EnableStdIo {
 			if err = fcgi.Serve(nil, app.Handlers); err == nil { // standard I/O
 				logs.Info("Use FCGI via standard I/O")
@@ -138,7 +139,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	app.Server.ErrorLog = logs.GetLogger("HTTP")
 
 	// run graceful mode
-	if app.Cfg.Listen.Graceful {
+	if app.Cfg.Listen.Graceful && adminAddr != addr {
 		httpsAddr := app.Cfg.Listen.HTTPSAddr
 		app.Server.Addr = httpsAddr
 		if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
@@ -196,7 +197,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	}
 
 	// run normal mode
-	if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
+	if (app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS) && adminAddr != addr {
 		go func() {
 			time.Sleep(1000 * time.Microsecond)
 			if app.Cfg.Listen.HTTPSPort != 0 {
