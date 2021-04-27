@@ -108,6 +108,9 @@ func registerAdmin() error {
 		c := &adminController{
 			servers: make([]*HttpServer, 0, 2),
 		}
+		api := &adminAPIController{
+			servers: make([]*HttpServer, 0, 2),
+		}
 
 		// copy config to avoid conflict
 		adminCfg := *BConfig
@@ -122,6 +125,10 @@ func registerAdmin() error {
 		beeAdminApp.Router("/task", c, "get:TaskStatus")
 		beeAdminApp.Router("/listconf", c, "get:ListConf")
 		beeAdminApp.Router("/metrics", c, "get:PrometheusMetrics")
+
+		beeAdminApp.Router("/api/qps", api, "get:QpsIndex")
+		beeAdminApp.Router("/api/conf", api, "get:Conf")
+		beeAdminApp.Router("/api/router", api, "get:Router")
 
 		go beeAdminApp.Run()
 	}
