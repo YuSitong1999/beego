@@ -29,6 +29,8 @@ var (
 	DefaultEvery = 60 // 1 minute
 )
 
+const keyNotExistMsg = "key not exist"
+
 // MemoryItem stores memory cache item.
 type MemoryItem struct {
 	val         interface{}
@@ -70,7 +72,7 @@ func (bc *MemoryCache) Get(ctx context.Context, key string) (interface{}, error)
 		}
 		return itm.val, nil
 	}
-	return nil, errors.New("the key isn't exist")
+	return nil, errors.New(keyNotExistMsg)
 }
 
 // GetMulti gets caches from memory.
@@ -112,7 +114,8 @@ func (bc *MemoryCache) Delete(ctx context.Context, key string) error {
 	bc.Lock()
 	defer bc.Unlock()
 	if _, ok := bc.items[key]; !ok {
-		return errors.New("key not exist")
+		
+		return errors.New(keyNotExistMsg)
 	}
 	delete(bc.items, key)
 	if _, ok := bc.items[key]; ok {
@@ -128,24 +131,14 @@ func (bc *MemoryCache) Incr(ctx context.Context, key string) error {
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return errors.New(keyNotExistMsg)
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val + 1
-	case int32:
-		itm.val = val + 1
-	case int64:
-		itm.val = val + 1
-	case uint:
-		itm.val = val + 1
-	case uint32:
-		itm.val = val + 1
-	case uint64:
-		itm.val = val + 1
-	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
+
+	val, err := incr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 
@@ -155,36 +148,14 @@ func (bc *MemoryCache) Decr(ctx context.Context, key string) error {
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return errors.New(keyNotExistMsg)
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val - 1
-	case int64:
-		itm.val = val - 1
-	case int32:
-		itm.val = val - 1
-	case uint:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
+
+	val, err := decr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 

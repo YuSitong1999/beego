@@ -32,7 +32,7 @@ import (
 // this Filter's behavior looks a little bit strange
 // for example:
 // if we want to records the metrics of QuerySetter
-// actually we only records metrics of invoking "QueryTable" and "QueryTableWithCtx"
+// actually we only records metrics of invoking "QueryTable"
 type FilterChainBuilder struct {
 	AppName    string
 	ServerName string
